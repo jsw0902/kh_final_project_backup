@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="member">
+
+		
+	<!-- 회원가입 -->
+	<insert id="insertUser"
+	parameterType="member">
+	
+	insert into tbl_user 
+	(user_no, 
+	 user_id, 
+	 user_pw, 
+	 user_nickname, 
+	 user_name, 
+	 user_address, 
+	 user_email, 
+	 user_phone) 
+	values 
+	(seq_user.nextval, 
+	 #{userId}, 
+	 #{userPw}, 
+	 #{userNickname}, 
+	 #{userName}, 
+	 #{userAddress}, 
+	 #{userEmail}, 
+	 #{userPhone})
+	 	
+	</insert>
+
+	<!-- 로그인 -->
+	<select id="loginMember" parameterType="member" resultType="member">
+		select user_no as userNo,
+           	   user_id as userId,
+           	   user_pw as userPw,
+           	   user_nickname as userNickname,
+               user_name as userName,
+               user_address as userAddress,
+               user_email as userEmail,
+               user_phone as userPhone,
+               user_type as userType,
+               enroll_date as enrollDate,
+               acct_level as acctLevel,
+               ban_yn as banYN, 
+               user_image as userImage
+          from tbl_user
+    	where user_id = #{userId} and user_pw = #{userPw}
+	</select>
+	
+   <!-- ID 중복 확인 -->
+   <select id="idDuplChk"
+   parameterType="string"
+   resultType="_int">
+	  select count(*)
+	  from tbl_user
+	  where user_id = #{_parameter}
+   </select>
+  
+   <!-- 닉네임 중복 확인 -->
+   <select id="nickDuplChk"
+   parameterType="string"
+   resultType="_int">
+	  select count(*)
+	  from tbl_user
+	  where user_nickname = #{_parameter}
+   </select>
+  
+   <!-- 전화번호 중복 확인 -->
+   <select id="phoneDuplChk"
+   parameterType="string"
+   resultType="_int">
+	  select count(*)
+	  from tbl_user
+	  where user_phone = #{_parameter}
+   </select>
+
+	<!-- API 회원가입 -->
+	<insert id="insertApiUser"
+	parameterType="member">
+		insert into tbl_user 
+		(user_no, 
+		 user_id, 
+		 user_pw, 
+		 user_nickname, 
+		 user_name, 
+		 user_address, 
+		 user_email, 
+		 user_phone,
+		 user_type) 
+		values 
+		(seq_user.nextval, 
+		 #{userId}, 
+		 #{userPw}, 
+		 #{userNickname}, 
+		 #{userName}, 
+		 #{userAddress}, 
+		 #{userEmail},
+		 #{userPhone},
+		 #{userType})
+	</insert>
+	<!-- 실시간 유저 검색 -->
+	<select id="userSearch" parameterType="string" resultType="member">
+		<![CDATA[
+	        SELECT * FROM (
+	            SELECT user_no AS userNo,
+	                   user_id AS userId,
+	                   user_nickname AS userNickname,
+	                   user_name AS userName,
+	                   user_image AS userImage
+	            FROM tbl_user
+	            WHERE UPPER(user_id) LIKE '%' || UPPER(#{search}) || '%'
+	               OR UPPER(user_name) LIKE '%' || UPPER(#{search}) || '%'
+	               OR UPPER(user_nickname) LIKE '%' || UPPER(#{search}) || '%'
+	            ORDER BY user_name ASC
+	        )
+	        WHERE ROWNUM <= 5
+    	]]>
+	</select>
+	<!-- 실시간 태그 검색 -->
+	<select id="tagSearch" parameterType="string" resultType="hashTag">
+		 <![CDATA[
+            SELECT * FROM (
+                SELECT 
+                    hash_name AS hashName,
+                    COUNT(post_no) AS postCount
+                FROM HASHTAG
+                WHERE LENGTH(#{search}) > 0
+                  AND UPPER(hash_name) LIKE '%' || UPPER(#{search}) || '%'
+                GROUP BY hash_name
+                ORDER BY hash_name DESC
+            )
+            WHERE ROWNUM <= 5
+        ]]>
+	</select>
+	<!-- 해시태그 검색 결과 -->
+	<select id="searchHashTagsKeyword" parameterType="map" resultType="hashTag">
+		<![CDATA[
+            SELECT *
+              FROM (
+                    SELECT ROWNUM rn, t.*
+                      FROM (
+                            SELECT hash_name  AS hashName,
+                                   COUNT(post_no) AS postCount
+                              FROM HASHTAG
+                             WHERE UPPER(hash_name) LIKE '%' || UPPER(#{search}) || '%'
+                             GROUP BY hash_name
+                             ORDER BY COUNT(post_no) DESC
+                           ) t
+                     WHERE ROWNUM <= #{end}
+                   )
+             WHERE rn > #{start}
+        ]]>
+	</select>
+	<!-- 유저 검색 결과 -->
+	<select id="searchUsersKeyword" parameterType="map" resultType="member">
+	<![CDATA[
+            SELECT *
+              FROM (
+                    SELECT ROWNUM rn, u.*
+                      FROM (
+                            SELECT user_no       AS userNo,
+                                   user_id       AS userId,
+                                   user_nickname AS userNickname,
+                                   user_name 	 AS userName,
+                                   user_image    AS userImage
+                              FROM TBL_USER
+                             WHERE UPPER(user_id)       LIKE '%' || UPPER(#{search}) || '%'
+                            	OR UPPER(user_name) LIKE '%' || UPPER(#{search}) || '%'
+                                OR UPPER(user_nickname) LIKE '%' || UPPER(#{search}) || '%'
+                             ORDER BY user_name DESC
+                           ) u
+                     WHERE ROWNUM <= #{end}
+                   )
+             WHERE rn > #{start}
+        ]]>
+	</select>
+	<!-- 검색 기록 최신화 -->
+	<update id="updateKeywordDate" parameterType="map">
+	    UPDATE search
+	    SET keyword_date = SYSDATE,
+	        search_type = #{searchType},
+	        search_user_id = #{userId}
+	    WHERE user_no = #{userNo}
+	      AND keyword = #{keyword}
+	</update>
+	<!-- 해시태그 검색 -->
+	<select id="selectKeywordTag" parameterType="string" resultType="hashTag">
+		select hash_no as hashNo,
+			   post_no as postNo,
+			   hash_name as hashName
+		  from HASHTAG
+		 where hash_name = #{hashName}
+	</select>
+	
+	<!-- 유저 검색 -->
+	<select id="selectKeywordUser" parameterType="string" resultType="member">
+		select user_no as userNo,
+		       user_id as userId,
+		       user_nickname as userNickname,
+		       user_name as userName,
+		       user_address as userAddress,
+		       enroll_date as enrollDate,
+		       user_image as userImage
+		  from tbl_user
+		 where user_nickname = #{userName}
+	</select>
+	
+	<!-- 검색 중복체크 -->
+	<select id="selectCheckKeyword" parameterType="map" resultType="int">
+	    SELECT COUNT(*) 
+	    FROM search 
+	    WHERE user_no = #{userNo} 
+	    AND keyword = #{keyword}
+	</select>
+	
+	<!-- 새 키워드 삽입 -->
+	<insert id="insertKeyword" parameterType="map">
+	    insert into search (user_no, keyword, search_type, search_user_id, keyword_date)
+	    values (#{userNo}, #{keyword}, #{searchType}, #{userId}, SYSDATE)
+	</insert>
+	
+	<!-- 키워드 삭제 -->
+	<delete id="deleteResultKeyword" parameterType="map">
+	    delete from search
+	    where user_no = #{userNo}
+	    and keyword = #{keyword}
+	</delete>
+	
+	<!-- 특정 해시태그 postNo값 가져옴  -->
+	<select id="keywordTag" parameterType="map" resultType="hashTag">
+	   <![CDATA[
+   			select
+	               f.post_no       AS postNo,
+	               p.user_no       AS userNo,
+	               p.post_content  AS postContent,
+	               p.post_date     AS postDate,
+	               f.post_file_name AS postFileName,
+	               h.hash_name     AS hashName
+	          FROM post_file f
+	          JOIN post p
+	            ON f.post_no = p.post_no
+	          LEFT JOIN hashtag h
+	            ON p.post_no = h.post_no
+	         WHERE h.hash_name = #{hashName}
+	           AND SUBSTR(f.post_file_name, INSTR(f.post_file_name, '_', -1, 1) + 1, 1) = '1'
+	           AND REGEXP_LIKE(f.post_file_name, '\.(jpg|jpeg|gif|png|wmv)$', 'i')
+	         ORDER BY p.post_no DESC
+	    
+		]]>
+	</select>
+	<!-- 태그 이름 -->
+	<select id="selectTagName" parameterType="string" resultType="hashTag">		
+		SELECT * FROM (
+		        SELECT * FROM HASHTAG WHERE hash_name = #{hashName}
+		    ) WHERE ROWNUM = 1
+	</select>
+	
+	<!-- 검색 기록 -->
+	 <select id="selectMySearchList" parameterType="int" resultType="search">
+	 	 SELECT * FROM (
+            SELECT 
+                s.user_no AS userNo,
+                s.keyword AS keyWord,
+                s.keyword_date AS keywordDate,
+                s.search_type AS searchType,
+                s.search_user_id AS searchUserId,
+                u.user_image AS userImage
+            FROM 
+                search s
+            LEFT JOIN
+                tbl_user u on s.search_user_id = u.user_nickname
+            WHERE 
+                s.user_no = #{userNo}
+            ORDER BY 
+                s.keyword_date DESC
+        ) WHERE ROWNUM &lt;= 10
+    </select>
+	<!-- 검색 날짜 최신화 -->
+	<update id="updateSearchHistory" parameterType="map">
+		update search
+	    SET keyword_date = SYSDATE
+	    WHERE user_no = #{userNo} AND keyword = #{keyword} AND search_type = #{searchType}
+	</update>
+	<!-- 검색 기록 삭제 -->
+	<delete id="deleteSearchHistory" parameterType="map">
+		delete from search
+		where user_no = #{userNo}
+		and keyword = #{search}
+		and search_type = #{searchType} 
+	</delete>
+	
+	<delete id="deleteAllSearchHistory" parameterType="int">
+	    DELETE FROM search
+	    WHERE user_no = #{userNo}
+	</delete>
+	
+	<delete id="userDelete"
+	parameterType="string">
+	delete from tbl_user
+		  where user_id = #{_parameter}
+	</delete>
+	
+	
+	<!-- 프로필 변경 -->
+	<update id="updateProfile" parameterType="member">
+		update tbl_user
+		   set user_nickname = #{userNickname},
+			   user_address = #{userAddress},
+			   user_email = #{userEmail},
+			   user_phone = #{userPhone}
+			   <if test="userImage != null">
+			   , user_image = #{userImage}
+			   </if>
+		 where user_id = #{userId}
+	</update>
+	
+	<!-- 비밀번호 변경 -->
+	<update id="updatePassword" parameterType="member">
+		update tbl_user
+		   set user_pw = #{userPw}
+		 where user_id = #{userId} and user_type = 'G'
+	</update>
+	
+	<select id="selectUserNo"  parameterType="string" resultType="int">
+		select user_no as userNo
+		  from tbl_user
+		 where user_id = #{userId} and user_type = 'G'
+	</select>
+	<!-- 아이디 찾기 -->
+	<select id="findUserId" parameterType="map" resultType="string"> 
+		select user_id as userId
+		from tbl_user
+		where user_email = #{email} and user_phone = #{phone} and user_type = 'G'
+	 </select>
+	 
+	<!-- 사용자의 ID와 이메일로 사용자 조회 -->
+	<select id="findUserByIdAndEmail" parameterType="map" resultType="string"> 
+		SELECT user_id 
+		FROM tbl_user 
+		WHERE user_id = #{userId} 
+		AND user_email = #{email} 
+	</select>
+	
+	<!-- 품종리스트 가져오기 -->
+    <select id="selectBreedType" parameterType="string" resultType="string">
+        select breed_${_parameter}_name as breedType
+          from breed_${_parameter}
+      order by breed_${_parameter}_name
+    </select>
+    
+    <!-- 반려동물 리스트 -->
+    <select id="selectMypet" parameterType="string" resultType="mypet">
+        select pet_no as petNo,
+               user_no as userNo,
+               pet_name as petName,
+               pet_gender as petGender,
+               pet_type as petType,
+               breed_type as breedType
+          from myPet
+           where user_no = #{userNo}
+    </select>
+    
+    <!-- 중복 반려동물 조회 -->
+    <select id="dupChkMypet" parameterType="mypet" resultType="_int">
+        select count(*)
+          from myPet
+           where user_no = #{userNo}
+           and pet_name = #{petName}
+    </select>
+    
+    <!-- 반려동물 마리수 조회 -->
+    <select id="overChkMypet" parameterType="mypet" resultType="_int">
+        select count(*)
+          from myPet
+           where user_no = #{userNo}
+    </select>
+    
+    <!-- 반려동물 추가 -->
+    <insert id="insertMypet" parameterType="mypet">
+        insert into mypet
+            (pet_no,
+             user_no,
+             pet_name,
+             pet_gender,
+             pet_type,
+             breed_type)
+        values
+            (seq_mypet.nextval,
+             #{userNo},
+             #{petName},
+             #{petGender},
+             #{petType},
+             #{breedType}) 
+    </insert>
+    
+    <!-- 반려동물 삭제 -->
+    <delete id="deleteMypet" parameterType="mypet">
+        delete from mypet
+              where pet_no = #{petNo}
+                and user_no = #{userNo}
+    </delete>
+    
+    <!-- 반려동물 수정 -->
+    <update id="updateMypet" parameterType="mypet">
+        update mypet
+           set pet_name = #{petName},
+               pet_gender = #{petGender},
+               pet_type = #{petType},
+               breed_type = #{breedType}
+         where pet_no = #{petNo}
+           and user_no = #{userNo}
+    </update>
+    
+    <select id="selectMyPetList" parameterType="int" resultType="mypet">
+    	select pet_no as petNo,
+               user_no as userNo,
+               pet_name as petName,
+               pet_gender as petGender,
+               pet_type as petType,
+               breed_type as breedType
+          from myPet
+        where user_no = #{userNo}
+    </select>
+    
+     <!-- 알림 발생자 닉네임 가져오기 -->
+    <select id="srchUserName" parameterType="_int" resultType="string">
+    	select user_nickname
+    	from tbl_user
+    	where user_no = #{_parameter}
+    </select>
+    
+
+    <select id="searchUserData" parameterType="int" resultType="member">
+		select user_no as userNo,
+           	   user_id as userId,
+           	   user_pw as userPw,
+           	   user_nickname as userNickname,
+               user_name as userName,
+               user_address as userAddress,
+               user_email as userEmail,
+               user_phone as userPhone,
+               user_type as userType,
+               enroll_date as enrollDate,
+               acct_level as acctLevel,
+               ban_yn as banYN, 
+               user_image as userImage
+          from tbl_user
+    	where user_no = #{userNo}    
+    
+    </select>
+    
+</mapper>

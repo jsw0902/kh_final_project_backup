@@ -1,0 +1,1004 @@
+@charset "UTF-8";
+@font-face {
+    font-family: 'Pretendard-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'KyoboHand';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/KyoboHand.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/*전체 서식*/
+*{
+	 text-decoration : none;
+	 font-family : "Pretendard-Regular";
+	 color : black;
+	 border : none;
+	}
+	
+
+/*헤더*/
+.header{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2%;
+}
+
+/*상단메뉴*/
+nav{
+	padding : 30px;
+}
+
+.nav-text {
+	padding: 10px;
+}
+
+ .header .nav-text:hover {
+ 	text-decoration: underline;
+ }
+
+/*로고*/
+.logo{
+	display: flex;
+	content-align: center;
+	align-items: center;
+}
+
+/*로고 이미지*/
+.logo .logo-img{
+	width : 4vw;  /*뷰포트 넓이의 4%*/
+	padding : 10px;
+	max-width: 100px;
+    min-width: 50px;
+}
+
+/*로고 텍스트*/
+.logo .logo-text{
+	font-family : "KyoboHand";
+	color : #f0a235;
+	font-size: 2.5vw; /*뷰포트 넓이의 2.5%*/
+	max-font-size: 70px;
+    min-font-size: 50px;
+    padding : 2px;
+}
+
+/*메인 이미지*/
+.main-image {
+    width: 35vw;
+    height: auto;
+    margin-left: 5%;
+    border-radius: 30px;
+    border: 0.5px solid #E6E6E6;
+}
+
+
+/*제출 버튼(통합)*/
+.submit-button{
+	width: 35vw;
+	background-color: #f0a235;
+	color: #fff;
+	height: 5vh;
+	margin-bottom: 10px;
+}
+
+/*input 박스*/
+input {
+	width: 35vw;
+	height: 5vh;	
+	display: flex;
+	align-items: flex-start;
+	background-color: #E6E6E6;
+	border-radius: 5px;
+	margin-bottom: 5px;
+}
+
+.submit-button:hover{
+	cursor: pointer;
+}
+
+/*버튼속성 양식*/
+[type=button]{
+	background-color: #f8f8f8;
+	border-radius: 4px;
+	border: 1px solid #CCC;
+	color: #333333;
+}
+
+button:hover{
+	cursor: pointer;
+}
+
+[type=button]:active {
+    background-color: #DDDDDD; 
+    border-color: #AAA;
+}
+
+/*로그인 화면*/
+.index-area .other-link {
+	text-decoration: underline;
+}
+
+.main{
+	display: flex;
+	justify-content: space-around;
+}
+
+.index-area{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	font-size: 14px;
+	color: #D8D8D8;
+}
+
+.index-area .input-area{
+	text-align: left;
+}
+
+.srch-link{
+	margin-top: 15px;
+	margin-bottom: 8px;
+}
+
+.index-area .title-text{
+	font-size: 25px;
+	margin-bottom: 30px;
+}
+
+.api-area{
+	width : 500px;
+	height : 70px;
+	display: flex;
+  	align-items: center;
+  	justify-content: space-evenly;
+}
+
+/*네이버 로그인*/
+#naver{
+	margin-top: 20px;
+	width: 187px;
+	height: 50px;
+	background-image: url("../resources/css_image/naver-login.png");
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
+	text-indent: -9999px;
+}
+
+/*카카오 로그인*/
+#kakao{
+	margin-top: 20px;
+	width: 187px;
+	height: 50px;
+	background-image: url("../resources/css_image/kakao-login.png");
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
+	text-indent: -9999px;
+	border-radius: 3px;
+}
+
+/*회원가입 화면*/
+.join-area{
+	display : flex;
+	flex-direction: column;
+	margin-bottom: 10vh;
+}
+
+.join-form .tag-name{
+	text-align: left;
+}
+
+.tag-name{
+	display: block;
+	text-align: left;
+}
+
+/*피드 메뉴 로고*/
+.nav-logo{
+	display: flex;
+	content-align: center;
+	align-items: center;
+}
+
+.nav-logo .logo-img{
+	width : 2vw;  /*뷰포트 넓이의 2%*/
+	padding : 8px;
+	max-width: 80px;
+    min-width: 20px;
+}
+
+.nav-logo .nav-logo-text{
+	font-family : "KyoboHand";
+	color : #f0a235;
+	font-size: 1.5vw; /*뷰포트 넓이의 1.5%*/
+	max-font-size: 70px;
+    min-font-size: 12px;
+    padding : 1px;
+}
+
+/*피드 메뉴 양식*/
+.side-menu{
+	height: 100vh;
+	width: 250px;
+	border-right: solid 0.5px #E6E6E6;
+	position: fixed;
+	top: 0;
+	left: 0;
+}
+
+.menu-list{
+	font-weight: bold;
+	display: flex;
+	flex-direction: column;
+	padding-left: 8px;
+	padding-top: 50px;
+}
+
+.icon-img{
+	width: 25px; 
+	padding-right: 10px;
+}
+
+.one-menu{
+	display: flex;
+	padding-bottom: 15px;
+	padding-top: 15px;
+}
+
+.menu-link{
+	display: block;
+	height: 100%;
+	width: 100%;
+}
+
+/*메뉴 프로필*/
+.profile{
+	margin-top: 40px;
+	display: flex;
+    align-items: center;
+	gap: 10px;
+}
+
+.profile-frame{
+	background-color: #E6E6E6;
+	height: 5vw;
+	width: 5vw;
+	border-radius: 50%;
+	overflow: hidden; /*나중에 사진 들어가면 깔끔하게 잘리게*/
+}
+
+
+
+/*메인 영역*/
+main {
+ margin-left: 350px; /*메뉴 두께만큼 마진*/
+ margin-top: 50px;
+}
+
+/*개인 피드*/
+#myfeed-main{
+ margin-right: 300px; /*펫정보 두께만큼 마진*/
+}
+
+#myfeed-profile{
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ position: static;
+ max-width:850px;
+}
+
+#profile-text{
+	padding-left: 20px;
+	gap: 30px;
+}
+
+#profile-text #myId {
+	font-size: 3.5vw;
+	font-weight: bold;
+}
+
+#profile-text #myNick {
+	font-size: 2vw;
+	font-weight: bold;
+	color: #666;
+}
+
+#myfeed-frame{
+	height: 180px;
+	width: 180px;
+}
+
+#follow-text{
+	display: flex;
+	padding-top: 2vh;
+	gap: 20px;
+}
+
+.profile-button{
+	margin-top: 10px;
+	border-radius: 20px;
+	background-color: #c9c9c9;
+	width: 100px;
+	height: 30px;
+}
+
+#updPet{
+	background-color: #F4F4E6;
+}
+
+#allBook{
+	background-color: #FFD06B;
+}
+
+#mySub{
+	background-color: #FFE1B7;
+}
+
+.post-write {
+	 margin-left: 50px;
+	 margin-right: 50px;
+	 margin-top: 50px;
+	 padding-bottom: 20px;
+	 border-bottom: 0.5px solid black;
+	 position: static;
+	 max-width:850px;
+}
+
+.write-button{
+	border-radius: 15px;
+	width: 85px;
+	height: 35px;
+}
+
+#post-button{
+	background-color: #F0A235;
+}
+
+#story-button{
+	background-color: #3BBD9E;
+}
+
+.post-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 한 줄에 3개 */
+    gap: 10px; 
+    max-width:850px;
+    margin-left: 50px;
+    margin-top: 10px;
+}
+
+.post-grid {
+    overflow: hidden;
+    width: 250px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feed-thumbnail {
+    width: 100%;
+    height: 100%; 
+    object-fit: cover;
+}
+
+.feed-thumbnail:hover {
+    cursor: pointer;
+    filter: brightness(50%);
+}
+
+/* 콘텐츠 모달창 배경 */
+.modal {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed; /* 화면 중앙 고정 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* 어두운 반투명 배경 */
+    z-index: 1000; /* 다른 요소 위로 표시 */
+}
+
+/* 모달 배치 */
+.modal-place {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* 모달 콘텐츠 */
+.modal-contents {
+    display: flex;
+    flex-direction: row;
+    background-color: #fff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    width: 80%;
+    max-width: 900px; 
+    height: auto; 
+}
+
+.tagify[readonly]{
+	margin-top: 40px;
+	margin-bottom: 0px;
+	width: 300px;
+	border: none;
+}
+
+
+/* 모달 이미지 */
+.modal-image img {
+	display: block; 
+    height: 500px;
+	align-items: center;
+	justify-content: center;
+    border-bottom-left-radius: 15px;
+    border-top-left-radius: 15px;
+}
+
+.modal-image {
+    height: 500px;
+    width: 500px;
+    position: relative; 
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    overflow: hidden;
+}
+
+
+/* 모달 본문 */
+.modal-body {
+    background-color: #fff;
+    border-bottom-right-radius: 15px;
+    border-top-right-radius: 15px;
+    width: 400px;
+    height: 500px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.previous,
+.next {
+    position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	background-color: rgba(0, 0, 0, 0.5);
+	color: white;
+	border: none;
+	padding: 5px;
+	border-radius: 50%;
+	cursor: pointer;
+	z-index: 10;
+}
+
+.previous {
+    left: 10px; /* 왼쪽 여백 */
+}
+
+.next {
+    right: 10px; /* 오른쪽 여백 */
+}
+
+.previous:hover {
+	background-color: rgba(0, 0, 0, 0.8);
+}
+
+.next:hover {
+	background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* 모달 본문 상단 */
+.modal-body .top {
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.3px solid #e9e9e9;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#modal-profile{
+	width: 50px;
+	height: 50px;
+}
+
+.modal-user{
+	display: flex;
+	gap: 10px;
+}
+
+.post-section{
+	 width: 400px;
+}
+
+/*모달 콘텐츠 텍스트*/
+.post-content{
+	margin-top: 10px;
+	margin-bottom :5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	overflow: auto;
+	height: 100px;
+	border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.post-content-hashtag{
+	width: 200px;
+}
+
+/* 닫기 버튼 */
+.modal-close {
+    font-size: 18px;
+    color: #ff6b6b;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/*수정, 삭제 버튼*/
+#post-delete{
+	width: 18px;
+    color: #f0a235;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#post-update{
+	width: 18px;
+    color: #1096e7;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+/* 포스트 작성 모달창 배경 */
+.post-modal {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed; /* 화면 중앙 고정 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* 어두운 반투명 배경 */
+    z-index: 1000; /* 다른 요소 위로 표시 */
+}
+
+.post-modal .modal-body{
+	display: flex;
+	align-items: center;
+	width: 600px;
+	border-top-left-radius: 15px;
+	border-bottom-left-radius: 15px;   
+}
+
+/* 포스트 수정 모달창 배경 */
+.update-modal {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed; /* 화면 중앙 고정 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* 어두운 반투명 배경 */
+    z-index: 1000; /* 다른 요소 위로 표시 */
+}
+
+.update-modal .modal-body{
+	display: flex;
+	align-items: center;
+	width: 600px;
+	border-top-left-radius: 15px;
+	border-bottom-left-radius: 15px;   
+}
+
+#post-write-close{
+	margin-left: 400px;
+}
+
+#post-update-close{
+	margin-left: 400px;
+}
+
+
+.modal-body textarea:focus {
+    border-color: #a0a0a0;
+    outline: none;
+}
+
+.modal-body textarea {
+    border: 0.5px solid #a0a0a0;
+}
+
+.modal-body input[type="submit"] {
+    width: 200px;
+    height: 40px;
+    background-color: #f0a235;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-body input[type="submit"]:hover {
+    background-color: #e59424;
+}
+
+.modal-body span {
+    font-size: 14px;
+    color: #555;
+}
+
+#post-input{
+	width: 408px;
+	margin-top: 10px;
+	background-color: #fff;
+}
+
+.post-hashtag:focus{
+	outline: none;
+}
+
+.post-hashtag{
+	background-color: #fff;
+	border: 0.5px solid #a0a0a0;
+}
+
+
+/*태그박스*/
+.tagify{
+	width: 408px;
+	margin-bottom: 10px;
+}
+
+/* 프로필 이미지 */
+.profileImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/* 댓글 영역 */
+.comment-section {
+    margin-top: 20px;
+    width: 100%; /* 부모 요소의 너비에 맞춤 */
+    max-width: 400px; /* 최대 너비 제한 */
+    overflow: hidden; /* 내용이 영역을 넘지 않도록 설정 */
+}
+
+/* 댓글 리스트 */
+.comment-list {
+    height: 180px; /* 고정된 높이 설정 */
+    overflow-y: auto; /* 스크롤 활성화 */
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    background: #f9f9f9;
+    margin-bottom: 15px; /* 댓글 리스트와 입력창 간격 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+    word-wrap: break-word; /* 긴 텍스트 줄바꿈 */
+}
+
+/* 댓글 항목 */
+.comment {
+    margin-bottom: 5px;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* 답글 */
+.reply {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid #eee;
+}
+
+/* 답글 링크 */
+.reply-link {
+    font-size: 14px;
+    color: #3b92bd;
+    text-decoration: underline;
+}
+
+/* 댓글 입력창 래퍼 */
+.comment-form-wrapper {
+    position: relative; /* 부모 요소 기준 위치 설정 */
+    padding: 0; /* 내부 여백 제거 */
+    margin: 0; /* 외부 여백 제거 */
+    width: 100%; /* 부모 요소의 너비에 맞춤 */
+    max-width: 400px; /* 최대 너비 제한 */
+    background: #ffffff; /* 배경색 */
+    border-top: 1px solid #ddd; /* 상단 테두리 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+}
+
+/* 댓글 입력창 */
+.comment-form {
+    display: flex; /* 입력창과 버튼 나란히 배치 */
+    align-items: center; /* 세로축 중앙 정렬 */
+    justify-content: space-between; /* 버튼과 입력창 간격 */
+    padding: 8px 10px; /* 내부 여백 최소화 */
+    gap: 10px; /* 입력창과 버튼 간격 */
+}
+
+/* 댓글 입력 필드 */
+.comment-input {
+    flex: 1; /* 남은 공간을 채우도록 설정 */
+    height: 36px; /* 입력창 높이 조정 */
+    padding: 6px; /* 내부 여백 최소화 */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: none; /* 크기 조정 비활성화 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+}
+
+/* 댓글 작성 버튼 */
+.submit-comment {
+    display: flex; /* 버튼 안의 내용 정렬 */
+    align-items: center;
+    justify-content: center;
+    background-color: #3bbd9e; /* 기본 배경색 */
+    color: white; /* 버튼 텍스트 색상 */
+    border: none;
+    border-radius: 50%; /* 동그란 버튼 */
+    width: 36px; /* 버튼 크기 축소 */
+    height: 36px; /* 버튼 크기 축소 */
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 버튼 그림자 */
+}
+
+/* 댓글 작성 버튼 호버 효과 */
+.submit-comment:hover {
+    background-color: #32a389; /* 호버 시 배경색 */
+}
+
+
+/* 아이콘 스타일 */
+.fa-comment {
+    color: #fff;
+    font-size: 16px;
+}
+
+/* 비활성화된 버튼 */
+.submit-comment:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* 답글 대상 표시 */
+.reply-target {
+    position: absolute; /* 절대 위치 지정 */
+    bottom: 100%; /* 입력창 위로 위치 */
+    left: 0; /* 왼쪽 정렬 */
+    width: 100%; /* 부모 요소 너비에 맞춤 */
+    margin-bottom: 8px; /* 입력창과의 여백 */
+    padding: 8px; /* 내용 여백 */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f9f9f9;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    display: none; /* 기본적으로 숨김 */
+    z-index: 1; /* 다른 요소 위에 표시 */
+}
+
+/* 답글 대상 텍스트 */
+.reply-target span {
+    font-size: 14px;
+    color: #333;
+}
+
+/* 답글 취소 버튼 */
+.cancel-reply {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 답글 취소 버튼 호버 효과 */
+.cancel-reply:hover {
+    color: #555;
+}
+
+/*댓글 수정창*/
+.edit-input {
+    width: 100%; /* 부모 요소에 맞게 너비 설정 */
+    height: 50px; /* 고정된 높이 */
+    resize: none; /* 크기 조정 불가능 */
+    padding: 10px; /* 내부 여백 */
+    border: 1px solid #ddd; /* 테두리 설정 */
+    border-radius: 5px; /* 모서리 둥글게 */
+    font-size: 14px; /* 텍스트 크기 */
+    line-height: 1.5; /* 줄 간격 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+    background-color: #f9f9f9; /* 배경색 */
+}
+
+.edit-input:focus {
+    border-color: #007bff; /* 포커스 시 테두리 색상 변경 */
+    outline: none; /* 기본 아웃라인 제거 */
+}
+
+.edit-buttons {
+    margin-top: 5px; /* 버튼과 입력창 사이 간격 */
+    text-align: right; /* 버튼 오른쪽 정렬 */
+}
+
+.edit-buttons button {
+    padding: 5px 10px;
+    margin-left: 5px; /* 버튼 간격 */
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.cancel-edit {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* 좋아요 버튼 기본 스타일 */
+.like-btn {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    margin-left: 8px; /* 댓글 오른쪽 정렬 */
+}
+
+/* 아이콘 크기 및 기본 색상 */
+.like-btn i {
+    font-size: 16px;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* 좋아요 숫자 스타일 */
+.like-btn .like-count {
+    font-size: 14px;
+    margin-left: 5px;
+    color: #555;
+    transition: color 0.2s ease;
+}
+
+/* 좋아요 추가 상태 (채워진 하트) */
+.like-btn[data-liked="true"] i {
+    color: #e74c3c; /* 빨간색 */
+    transform: scale(1.2); /* 살짝 커짐 */
+}
+
+/* 좋아요 해제 상태 (빈 하트) */
+.like-btn[data-liked="false"] i {
+    color: #e74c3c; 
+    transform: scale(1);
+}
+
+/* 좋아요 클릭 시 애니메이션 */
+.like-btn i:active {
+    transform: scale(1.4);
+    transition: transform 0.1s ease;
+}
+
+/*알림창*/
+.notification-sidebar {
+   position: fixed;
+   top: 0;
+   left: -300px;
+   width: 300px;
+   height: 100%;
+   background-color: white;
+   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+   transition: left 0.3s ease, visibility 0.3s ease;
+   padding: 20px;
+   visibility: hidden;
+ }
+
+ .notification-sidebar.open {
+   left: 0;
+   visibility: visible;
+ }
+
+ .notification-header {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+ .notification-content {
+   margin-bottom: 20px;
+ }
+
+.close-sidebar-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333; /* 회색 */
+    transition: color 0.3s ease;
+}
+ .close-sidebar-btn:hover {
+    color: #007bff;
+ }
+ 
+ .open-notification-btn:hover {
+   cursor: pointer;
+ }
+ 
+ .notification-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #eaeaea;
+}
+
+.notification-item:hover {
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.notification-item .item-text {
+    font-size: 14px;
+    color: #333333;
+    flex: 1; /* 내용이 길어지면 적절히 확장 */
+    margin-right: 10px;
+    word-wrap: break-word;
+}
+
+.notification-item .item-time {
+    font-size: 12px;
+    color: #999999;
+    white-space: nowrap; /* 시간을 한 줄로 표시 */
+    margin-left: auto;
+}
+ 
+/* 모두 읽음 처리 버튼 */
+.mark-all-read-btn {
+    font-size: 12px; /* 크기 줄임 */
+    background-color: #a9afb6; /* 회색 */
+    color: white;
+    border: none;
+    padding: 4px 8px; /* 크기 조정 */
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    position: absolute;
+    right: 25px; /* X 버튼과 간격 */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.mark-all-read-btn:hover {
+    background-color: #5a6268; /* 어두운 회색 */
+}
+ 

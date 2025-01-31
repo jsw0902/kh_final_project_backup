@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="post">
+	
+	<!-- 게시글 데이터 조회 -->
+	<select id="postData" parameterType="_int"
+	resultType="post">
+		SELECT 
+            f.post_file_no AS postFileNo,
+            f.post_no AS postNo,
+            f.post_file_name AS postFileName,
+            p.user_no AS userNo,
+            p.post_content AS postContent,
+            p.post_date AS postDate
+        FROM 
+            post_file f
+        JOIN 
+            post p ON (f.post_no = p.post_no)	  
+        WHERE 
+            p.user_no = #{_parameter} 
+            AND SUBSTR(f.post_file_name, INSTR(f.post_file_name, '_', -1, 1) + 1, 1) = '1'
+            AND REGEXP_LIKE(f.post_file_name, '\.(jpg|jpeg|gif|png|wmv)$', 'i')
+        ORDER BY 
+            post_date DESC
+	</select>
+	
+	<!-- 게시글 이미지 리스트 조회 -->
+	<select id="imgList" parameterType="_int"
+	resultType="String">
+		
+		select f.post_file_name
+		 from post_file f
+		 join post p on (f.post_no = p.post_no)
+	     where p.post_no = ${_parameter}
+	     
+	</select>
+	
+	<!-- 게시글 코드(시퀀스) 생성 -->	
+	<select id="getPostId" resultType="_int">
+		select seq_post.nextval from dual
+	</select>
+	
+	<!-- 게시글 생성 -->
+	<insert id="write" parameterType="post">
+		insert into post 
+		(post_no, user_no, post_content, post_date) 
+		values
+		(#{postNo}, #{userNo}, #{postContent}, sysdate)
+	</insert>
+	
+	<!-- 이미지 삽입 -->
+	<insert id="image" parameterType="post">
+		insert into post_file
+		(post_file_no, post_no, post_file_name)
+		values
+		(seq_post_file.nextval, #{postNo}, #{postFileName})
+	</insert>
+	
+	<!-- 해시태그 삽입 -->
+	<insert id="hashTag" parameterType="map">	
+		insert into hashtag
+		(hash_no, post_no, hash_name)
+		values
+        (seq_hashtag.nextval, #{postNo}, #{tag})  	
+	</insert>
+	
+	<!-- 해시태그 불러오기 -->
+	<select id="tagList" parameterType="_int"
+	resultType="String">
+		select hash_name
+		from hashtag h
+		join post p on (p.post_no = h.post_no)
+		where h.post_no = ${_parameter}		
+	</select>
+	
+	<!-- 포스트 삭제 -->
+	<delete id="delPost" parameterType="_int">
+		delete post where post_no = #{_parameter}
+	</delete>
+	
+	<!-- 포스트 업데이트 -->
+	<update id="updPost" parameterType="post">
+		update post
+			set  post_content = #{postContent}
+		where user_no = #{userNo} and post_no = #{postNo}
+	</update>
+	
+	<!-- 해시태그 삭제 -->
+	<delete id="delTag" parameterType="_int">
+		delete hashtag where post_no = #{_parameter}
+	</delete>
+	
+	<!-- 게시글 댓글조회 -->
+	<select id="getComment" parameterType="_int"
+	resultType="comment">
+		select c.comment_no as commentNo,
+			   c.user_no as userNo,
+			   c.post_no as postNo,
+			   c.parent_no as parentNo,
+			   c.comment_content as commentContent,
+			   c.comment_date as commentDate,
+			   u.user_nickname as userNickname,
+			   u.user_id as userId
+		from tbl_comment c
+		join tbl_user u on (c.user_no = u.user_no)  
+		where c.post_no = #{_parameter}
+		order by comment_date desc
+	</select>
+	
+	<!-- 게시글 댓글 삽입 -->
+	<insert id="writeComment" parameterType="comment">
+		insert into tbl_comment (
+		 	comment_no,
+            user_no, 
+            post_no, 
+            parent_no, 
+            comment_content, 
+            comment_date
+		) values (
+			seq_comment.NEXTVAL, 
+            #{userNo}, 
+            #{postNo},
+            CASE WHEN #{parentNo} = 0 THEN NULL ELSE #{parentNo} END, 
+            #{commentContent}, 
+            SYSDATE		
+		)
+	</insert>
+	
+	<!-- 게시글 댓글 삭제 -->
+	<delete id="delComment" parameterType="_int">
+		delete tbl_comment where comment_no = #{_parameter}
+	</delete>
+	
+	<!-- 게시글 댓글 수정 -->
+	<update id="updComment" parameterType="map">
+		update tbl_comment
+			set comment_content = #{commentContent}
+		where user_no = #{userNo} and comment_no = #{commentNo}
+	</update>
+	
+	 <!-- 좋아요 추가 -->
+    <insert id="insertLike" parameterType="like">
+        INSERT INTO tbl_like (
+            target_no,
+            user_no,
+            target_type
+        ) VALUES (
+            #{targetNo},
+            #{userNo},
+            #{targetType}
+        )
+    </insert>
+    
+    <!-- 좋아요 여부 확인 -->
+    <select id="isLiked" parameterType="like" resultType="_int">
+         SELECT COUNT(*)
+		    FROM tbl_like
+		    WHERE target_no = #{targetNo}
+		      AND user_no = #{userNo}
+		      AND target_type = #{targetType}
+    </select>
+	
+	<!-- 좋아요 삭제 -->
+    <delete id="deleteLike" parameterType="like">
+        DELETE FROM tbl_like
+        WHERE target_no = #{targetNo} 
+          AND user_no = #{userNo} 
+          AND target_type = #{targetType}
+    </delete>
+
+    <!-- 좋아요 개수 조회 -->
+    <select id="countLike" parameterType="map" resultType="_int">
+        SELECT COUNT(*) 
+        FROM tbl_like
+        WHERE target_no = #{targetNo} 
+          AND target_type = #{targetType}
+    </select>
+    
+    <!-- 팔로우한 사람의 최근 2일 이내 랜덤 5개 게시물 -->
+    <select id="getRecentFollowPosts" parameterType="int" resultType="post">
+         SELECT *
+		    FROM (
+		        SELECT 
+		            p.post_no AS postNo,
+		            p.user_no AS userNo,
+		            p.post_content AS postContent,
+		            TO_CHAR(p.post_date, 'YYYY-MM-DD HH24:MI:SS') AS postDate,
+		            u.user_image AS userImage,
+		            u.user_nickname AS userNickname,
+					fc.firstCommentContent AS firstCommentContent,
+            		fc.firstCommentUserNickname AS firstCommentUserNickname,
+		            (SELECT COUNT(*) 
+		               FROM tbl_like l 
+		              WHERE l.target_no = p.post_no 
+		                AND l.target_type = 'P') AS likeCount,
+		            (SELECT COUNT(*) 
+		               FROM tbl_comment c 
+		              WHERE c.post_no = p.post_no) AS commentCount,
+		              
+		           	  LISTAGG(pf.post_file_name, ',') 
+		                WITHIN GROUP (ORDER BY pf.post_file_no) AS postFileName,
+					 CASE WHEN EXISTS (
+					    SELECT 1 FROM tbl_like l 
+					    WHERE l.target_no = p.post_no 
+					      AND l.user_no = #{userNo}
+					      AND l.target_type = 'P'
+					) THEN 1 ELSE 0 END AS isLiked,
+		            DBMS_RANDOM.VALUE AS rand_val
+		        FROM 
+		            post p
+		            JOIN tbl_user u 
+		              ON p.user_no = u.user_no
+		            LEFT JOIN post_file pf 
+		              ON p.post_no = pf.post_no
+					LEFT JOIN (
+						SELECT 
+							c.post_no, 
+							c.comment_content AS firstCommentContent, 
+							u_c.user_nickname AS firstCommentUserNickname
+						FROM 
+							tbl_comment c
+							JOIN tbl_user u_c 
+							ON c.user_no = u_c.user_no
+						WHERE 
+							c.comment_no = (
+								SELECT MIN(c2.comment_no)
+								FROM tbl_comment c2
+								WHERE c2.post_no = c.post_no
+							)
+					) fc 
+					ON p.post_no = fc.post_no
+		        WHERE 
+		            p.user_no IN (
+		                SELECT following_no 
+		                  FROM follow 
+		                 WHERE follower_no = #{userNo}
+		            ) 
+		        GROUP BY
+		            p.post_no,
+		            p.user_no,
+		            p.post_content,
+		            p.post_date,
+		            u.user_image,
+		            u.user_nickname,
+					fc.firstCommentContent,
+           			fc.firstCommentUserNickname
+		        ORDER BY 
+		            DBMS_RANDOM.VALUE
+		    )
+        WHERE ROWNUM &lt;= 5
+    </select>
+
+    <!-- 전체 게시물 중 중복되지 않은 랜덤 게시물 가져오기 -->
+	<select id="getRandomPosts" parameterType="int" resultType="post">
+	    SELECT * FROM (
+	        SELECT 
+	            p.post_no AS postNo,
+	            p.user_no AS userNo,
+	            p.post_content AS postContent,
+	            TO_CHAR(p.post_date, 'YYYY-MM-DD HH24:MI:SS') AS postDate,
+	            u.user_image AS userImage,
+	            u.user_nickname AS userNickname,
+				fc.firstCommentContent AS firstCommentContent,
+				fc.firstCommentUserNickname AS firstCommentUserNickname,
+	            (SELECT COUNT(*) 
+	               FROM tbl_like l 
+	              WHERE l.target_no = p.post_no 
+	                AND l.target_type = 'P') AS likeCount,
+	            (SELECT COUNT(*) 
+	               FROM tbl_comment c 
+	              WHERE c.post_no = p.post_no) AS commentCount,
+	            LISTAGG(pf.post_file_name, ',') 
+	                WITHIN GROUP (ORDER BY pf.post_file_no) AS postFileName,
+		            CASE WHEN EXISTS (
+					    SELECT 1 FROM tbl_like l 
+					    WHERE l.target_no = p.post_no 
+					      AND l.user_no = #{userNo}
+					      AND l.target_type = 'P'
+					) THEN 1 ELSE 0 END AS isLiked,
+	            DBMS_RANDOM.VALUE AS rand_val
+	        FROM 
+	            post p
+	        JOIN tbl_user u ON p.user_no = u.user_no
+	        LEFT JOIN post_file pf ON p.post_no = pf.post_no
+			LEFT JOIN (
+				SELECT 
+					c.post_no, 
+					c.comment_content AS firstCommentContent, 
+					u_c.user_nickname AS firstCommentUserNickname
+				FROM 
+					tbl_comment c
+				JOIN tbl_user u_c ON c.user_no = u_c.user_no
+				WHERE 
+					c.comment_no = (
+						SELECT MIN(c2.comment_no)
+						FROM tbl_comment c2
+						WHERE c2.post_no = c.post_no
+					)
+			) fc ON p.post_no = fc.post_no
+	        GROUP BY
+	            p.post_no,
+	            p.user_no,
+	            p.post_content,
+	            p.post_date,
+	            u.user_image,
+	            u.user_nickname,
+				fc.firstCommentContent,
+            	fc.firstCommentUserNickname
+	        ORDER BY 
+	            DBMS_RANDOM.VALUE
+	    )
+	    WHERE ROWNUM &lt;= #{limit}
+	</select>
+
+    <!-- 무한 스크롤 시 추가 게시물 가져오기 -->
+    <select id="getMorePosts" parameterType="map" resultType="post">
+	     SELECT DISTINCT * FROM (
+        SELECT inner_query.*, ROWNUM AS rn FROM (
+            SELECT 
+                p.post_no AS postNo,
+                p.user_no AS userNo,
+                p.post_content AS postContent,
+                TO_CHAR(p.post_date, 'YYYY-MM-DD HH24:MI:SS') AS postDate,
+                u.user_image AS userImage,
+                u.user_nickname AS userNickname,
+				fc.firstCommentContent AS firstCommentContent,
+                fc.firstCommentUserNickname AS firstCommentUserNickname,
+                (SELECT COUNT(*) FROM tbl_like l WHERE l.target_no = p.post_no AND l.target_type = 'P') AS likeCount,
+                (SELECT COUNT(*) FROM tbl_comment c WHERE c.post_no = p.post_no) AS commentCount,
+                LISTAGG(pf.post_file_name, ',') 
+                    WITHIN GROUP (ORDER BY pf.post_file_no) AS postFileName,
+                CASE WHEN EXISTS (
+			    SELECT 1 FROM tbl_like l 
+			    WHERE l.target_no = p.post_no 
+			      AND l.user_no = #{userNo}
+			      AND l.target_type = 'P'
+			) THEN 1 ELSE 0 END AS isLiked
+            FROM 
+                post p
+                JOIN tbl_user u ON p.user_no = u.user_no
+                LEFT JOIN post_file pf ON p.post_no = pf.post_no
+				LEFT JOIN (
+                SELECT 
+                    c.post_no, 
+                    c.comment_content AS firstCommentContent, 
+                    u_c.user_nickname AS firstCommentUserNickname
+                FROM 
+                    tbl_comment c
+                JOIN tbl_user u_c ON c.user_no = u_c.user_no
+                WHERE 
+                    c.comment_no = (
+                        SELECT MIN(c2.comment_no)
+                        FROM tbl_comment c2
+                        WHERE c2.post_no = c.post_no
+                    )
+            ) fc ON p.post_no = fc.post_no
+            <where>
+                <if test="excludeList != null and excludeList.size() > 0">
+                    AND p.post_no NOT IN
+                    <foreach item="item" index="index" collection="excludeList" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            GROUP BY
+                p.post_no,
+                p.user_no,
+                p.post_content,
+                p.post_date,
+                u.user_image,
+                u.user_nickname,
+				fc.firstCommentContent,
+                fc.firstCommentUserNickname
+            ORDER BY 
+                DBMS_RANDOM.VALUE
+        ) inner_query
+        WHERE ROWNUM &lt;= #{endRow}
+    )
+    </select>
+    
+    <!-- 다중 이미지 조회 쿼리 추가 -->
+    <select id="getPostImages" parameterType="int" resultType="String">
+        SELECT 
+            post_file_name AS postFileName
+        FROM 
+            post_file
+        WHERE 
+            post_no = #{postNo}
+            AND REGEXP_LIKE(post_file_name, '\\.(jpg|jpeg|gif|png|wmv)$', 'i')
+        ORDER BY 
+            post_file_no ASC
+    </select>
+    
+    <!-- 게시글 작성자 아이디 조회(알림) -->
+    <select id="getPostOwnerId" parameterType="_int" resultType="_int">
+    	select user_no
+    	from post
+    	where post_no = #{_parameter}
+    </select>
+    
+    <!-- 댓글 작성자 아이디 조회(알림) -->
+    <select id="commentOwnerId" parameterType="_int" resultType="_int">
+    	select user_no
+    	from tbl_comment
+    	where comment_no = #{_parameter}
+    </select>
+</mapper>

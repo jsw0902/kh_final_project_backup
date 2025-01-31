@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+		<settings>
+			<setting name="jdbcTypeForNull" value="NULL" />
+		</settings>
+		
+		<typeAliases>
+			<typeAlias type="kr.or.iei.member.model.vo.Member" alias="member"/>
+			<typeAlias type="kr.or.iei.kakao.model.vo.KakaoUser" alias="kakaoUser"/>
+			<typeAlias type="kr.or.iei.naver.model.vo.NaverUser" alias="naverUser"/>
+			<typeAlias type="kr.or.iei.post.model.vo.Post" alias="post"/>
+			<typeAlias type="kr.or.iei.post.model.vo.Comment" alias="comment"/>
+			<typeAlias type="kr.or.iei.post.model.vo.Like" alias="like"/>
+			<typeAlias type="kr.or.iei.member.model.vo.HashTag" alias="hashTag"/>
+			<typeAlias type="kr.or.iei.member.model.vo.Search" alias="search"/>
+			<typeAlias type="kr.or.iei.follow.model.vo.Follow" alias="follow"/>
+			<typeAlias type="kr.or.iei.member.model.vo.Mypet" alias="mypet"/>
+			<typeAlias type="kr.or.iei.member.model.vo.Mypet" alias="mypet"/>
+			<typeAlias type="kr.or.iei.story.model.vo.Story" alias="story"/>
+			<typeAlias type="kr.or.iei.story.model.vo.StoryFile" alias="storyFile"/>
+			<typeAlias type="kr.or.iei.story.model.vo.StoryFollowList" alias="storyFollowList"/>
+			<typeAlias type="kr.or.iei.chat.model.vo.ChatRoom" alias="chatRoom"/>
+			<typeAlias type="kr.or.iei.chat.model.vo.ChatMessage" alias="chatMessage"/>
+			<typeAlias type="kr.or.iei.notify.model.vo.Notify" alias="notify"/>
+			<typeAlias type="kr.or.iei.report.model.vo.Report" alias="report"/>
+			<typeAlias type="kr.or.iei.report.model.vo.BanList" alias="banList"/>
+			<typeAlias type="kr.or.iei.report.model.vo.MemberInfo" alias="memberInfo"/>
+		</typeAliases>
+
+</configuration>

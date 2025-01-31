@@ -1,0 +1,622 @@
+package kr.or.iei.post.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import kr.or.iei.common.util.DateUtil;
+import kr.or.iei.follow.model.service.FollowService;
+import kr.or.iei.member.model.service.MemberService;
+import kr.or.iei.member.model.vo.HashTag;
+import kr.or.iei.member.model.vo.Member;
+import kr.or.iei.member.model.vo.Mypet;
+import kr.or.iei.notify.controller.NotifyController;
+import kr.or.iei.notify.model.service.NotifyService;
+import kr.or.iei.post.model.service.PostService;
+import kr.or.iei.post.model.vo.Comment;
+import kr.or.iei.post.model.vo.Like;
+import kr.or.iei.post.model.vo.Post;
+@RequestMapping("/post/")
+@Controller
+public class PostController {
+	
+	@Autowired
+	private ServletContext servletContext;
+	
+	@Autowired
+	@Qualifier("postService")
+	private PostService postService;
+	
+	@Autowired
+	@Qualifier("followService")
+    private FollowService followService;
+	
+	@Autowired
+	@Qualifier("service")
+	private MemberService memberService;
+	
+	@Autowired
+	@Qualifier("notifyService")
+	private NotifyService notifyService;
+	
+	@Autowired
+	@Qualifier("notifyController")
+	private NotifyController notifyController;
+	
+	//유저 피드 데이터 불러오기(포스트 이미지, 콘텐츠, 팔로우 수, 썸네일 리스트)
+	@GetMapping("myFeedFrm.kh") //메뉴 버튼이랑 매핑
+	public String userFeedInfo(Model model, HttpSession session) {
+		 
+		Member loginMember = (Member) session.getAttribute("loginMember");
+		
+		int userNo = loginMember.getUserNo();		
+        int followerCount  = followService.getFollowerCount(userNo);  // 나를 팔로우하는 사람 수
+        int followingCount = followService.getFollowingCount(userNo); // 내가 팔로우하는 사람 수
+		
+		ArrayList<Post> postData = postService.postData(userNo);
+		
+		ArrayList<Mypet> mypets = memberService.selectMyPetList(userNo);
+		
+		model.addAttribute("member", loginMember);
+		model.addAttribute("mypetList", mypets);
+		model.addAttribute("post", postData);
+		model.addAttribute("followerCount", followerCount);
+		model.addAttribute("followingCount", followingCount);
+		
+		
+		return "member/myFeed";
+
+	}
+	
+	//이미지 리스트 반환(ajax)
+	@GetMapping(value="imgLists.kh", produces="application/json; charset=utf-8")
+	@ResponseBody
+	public String imgLists(@RequestParam("postNo")int postNo) {
+		
+		ArrayList<String> result = postService.imgLists(postNo);	
+		return new Gson().toJson(result);
+	}
+	
+	//post 작성
+	@PostMapping("write.kh")
+	public String savePost(@RequestParam("userNo")int userNo, Model model, HttpServletRequest request, @RequestParam("content") String content , @RequestParam("files") MultipartFile [] files, @RequestParam("hashtag") String tagString) {
+		
+		//1. 미리 시퀀스 세팅
+		int postNo = postService.postNo();
+		Post post = new Post();
+		
+		//post 객체 세팅
+		post.setPostNo(postNo);
+		post.setPostContent(content);
+		post.setUserNo(userNo);
+		
+		//2. 게시글 생성(여부 확인)
+		int resWr = postService.write(post);
+		   
+		//3. 사진 폴더 삽입 + 이름 세팅, 이름 객체에 저장
+		   //System.out.println("메서드 진입: 파일 처리 시작");
+		   
+		   if (files == null || files.length == 0) {
+			    System.out.println("업로드된 파일이 없습니다.");
+			    return "member/myFeed";
+			}
+		   
+		   for(int i=0; i<files.length; i++) {
+			   
+			   MultipartFile file = files[i];
+			   
+			   //들어갈 경로 세팅
+			   String savePath = request.getSession().getServletContext().getRealPath("/resources/post_file/");
+			   			   
+			   //기존 파일 이름, 확장자 가져오기
+			   String originalFileName = file.getOriginalFilename();
+			   String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+			   
+			   //파일 이름 변경
+			   String toDay = new SimpleDateFormat("yyyyMMdd").format(new Date());
+			  
+			   String fileName = post.getUserNo() + "_" 
+					   		   + post.getPostNo() + "_" 
+					   		   + toDay + "_"
+					   		   + (i+1) + extension;
+			   
+			   //파일 경로 세팅
+			   savePath += fileName;
+			   
+			   
+			   try {				   
+				//파일 저장
+				file.transferTo(new File(savePath));
+				
+			} catch (IllegalStateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			   
+			   //4. 사진 삽입(DB) - 순회하면서 같이 삽입
+			   post.setPostFileName(fileName);
+			   postService.image(post);
+		    }
+
+		   
+		//5. 해시태그 삽입 - json을 String으로 받아서 array로 변환
+		ObjectMapper objMap = new ObjectMapper();   
+		int resHs = 0;  
+		ArrayList<String> tagArr;
+		
+		try {
+			
+			tagArr = objMap.readValue(tagString, new TypeReference<ArrayList<String>>() {});	
+			//태그 array 전달
+			resHs = postService.hashtag(tagArr, postNo);			
+			
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}							
+		
+		//성공시 피드 랜딩
+		if(resHs > 0 && resWr > 0) {			
+			return "redirect:myFeedFrm.kh";								
+		}else {
+			model.addAttribute("message", "작업에 실패했습니다. 다시 시도해주세요.");
+		    model.addAttribute("url", "redirect:myFeedFrm.kh");
+		    return "common/alert";
+		}
+		
+	}
+	
+	//해시태그 불러오기
+	@GetMapping(value="hashtags.kh", produces="application/json; charset=utf-8")
+	@ResponseBody
+	public ArrayList<String> callHashtag(@RequestParam("postNo") int postNo) {	
+		ArrayList<String> tagList = (ArrayList<String>) postService.callHashtag(postNo);		
+		return tagList;
+	}
+	
+	//게시물 삭제
+	@GetMapping(value="delete.kh", produces="text/html; charset=utf-8")
+    @ResponseBody
+    public String deletePost(@RequestParam("postNo") int postNo) {
+        
+		 // 파일 경로 리스트 가져오기
+        ArrayList<String> filePaths = postService.imgLists(postNo);
+        String basePath =  servletContext.getRealPath("/resources/post_file/");
+        
+        //배열 순회하면서 파일 삭제
+        for(String filePath : filePaths) {
+        	if(filePath != null) {
+        		File file = new File(basePath + filePath);
+        		if (file.exists() && !file.delete()) {
+                    return "error"; // 파일 삭제 실패 시 반환
+                }      		
+        	}
+        }
+         
+        // 데이터베이스에서 게시물 삭제
+        int result = postService.deletePost(postNo);
+        
+        if (result > 0) {
+            return "success"; 
+        } else {
+            return "error"; 
+        }
+		
+    }
+	
+	//게시물 수정
+	@PostMapping("update.kh")
+	public String updatePost(Model model, @RequestParam("userNo") int userNo, @RequestParam("postNo") int postNo, @RequestParam("content") String content, @RequestParam("hashtag") String tagString ) {
+		
+		Post post = new Post();
+		
+		//post 객체 세팅
+		post.setUserNo(userNo);
+		post.setPostNo(postNo);
+		post.setPostContent(content);
+		
+		 if (postNo == 0) {
+		        // postNo가 null일 경우 처리 로직
+		        //System.out.println("postNo 값이 없습니다.");
+		    }
+		
+		//post 수정
+		int resPs = postService.updatePost(post);
+		
+		//hashtag 수정
+		ObjectMapper objMap = new ObjectMapper();   
+		int resHs = 0;  
+		ArrayList<String> tagArr;
+		
+		try {
+			tagArr = objMap.readValue(tagString, new TypeReference<ArrayList<String>>() {});
+			
+			//삭제 후 재삽입
+			//삭제
+			int delRes = postService.delTag(postNo);
+			
+			if(delRes < 0) {
+				model.addAttribute("message", "작업에 실패했습니다. 다시 시도해주세요.");
+			    model.addAttribute("url", "redirect:myFeedFrm.kh");
+			    return "common/alert";
+			}
+	
+			
+			//태그 array 전달(삽입)
+			resHs = postService.hashtag(tagArr, postNo);			
+			
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}							
+		
+		//성공시 피드 랜딩
+		if(resHs > 0 && resPs > 0) {			
+			return "redirect:myFeedFrm.kh";								
+		}else {
+			model.addAttribute("message", "작업에 실패했습니다. 다시 시도해주세요.");
+		    model.addAttribute("url", "redirect:myFeedFrm.kh");
+		    return "common/alert";
+		}
+	}
+	
+	//게시물 댓글 조회
+	@GetMapping(value="comment.kh", produces="application/json; charset=utf-8")
+	@ResponseBody
+	public ArrayList<Comment> getComment(Model model, @RequestParam("postNo") int postNo) {	
+		ArrayList<Comment> comments = postService.getComment(postNo);
+		return comments;
+	}
+	
+	//댓글 작성
+	@PostMapping(value = "cmtWrite.kh", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public Map<String, Object> writeComment(@RequestBody Comment comment) {
+	    Map<String, Object> response = new HashMap<>();
+
+	    try {
+	        int result = postService.writeComment(comment);
+
+	        if (result > 0) {
+	            response.put("success", true);
+	            
+	            //알림 생성 로직
+	            if(comment.getParentNo() != 0) {
+	            	//알림 생성 호출(case4)
+	            	int commentOwnerId = postService.getCommentOwnerId(comment.getParentNo()); // 댓글 작성자 No 조회
+	                notifyController.sendNotification(comment.getUserNo(), commentOwnerId, 4);
+	            	
+	            }else {           	
+	            	// 알림 생성 호출(case1)
+	            	int postOwnerId = postService.getPostOwnerId(comment.getPostNo()); // 게시글 작성자 No 조회
+	            	notifyController.sendNotification(comment.getUserNo(), postOwnerId, 1);
+	            }
+	            
+	            
+	            
+	        } else {
+	            response.put("success", false);
+	            response.put("message", "댓글 작성에 실패했습니다. 다시 시도해주세요.");
+	        }
+	    } catch (Exception e) {
+	        response.put("success", false);
+	        response.put("message", "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+	        e.printStackTrace();
+	    }
+
+	    return response;
+	}
+
+	
+	//댓글 삭제
+	@GetMapping(value = "cmtDelete.kh", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public Map<String, Object> delComment(@RequestParam("commentNo") int commentNo) {
+	    int result = postService.delComment(commentNo);
+	    Map<String, Object> response = new HashMap<>();
+
+	    if (result > 0) {
+	        response.put("success", true);
+	        response.put("message", "댓글이 삭제되었습니다.");
+	    } else {
+	        response.put("success", false);
+	        response.put("message", "댓글 삭제에 실패했습니다.");
+	    }
+
+	    return response; 
+	}
+
+	//댓글 수정
+	@PostMapping(value = "cmtUpdate.kh", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public Map<String, Object> updateComment(@RequestBody Map<String, Object> params) {	
+		
+		
+		
+		// Map으로 받은 데이터를 그대로 서비스에 전달
+	    int result = postService.updComment(params);
+
+	    // 응답 데이터 생성
+	    Map<String, Object> response = new HashMap<>();
+	    if (result > 0) {
+	        response.put("success", true);
+	        response.put("message", "댓글이 성공적으로 수정되었습니다.");
+	    } else {
+	        response.put("success", false);
+	        response.put("message", "댓글 수정에 실패했습니다. 다시 시도해주세요.");
+	    }
+
+	    return response; 
+	}
+
+
+	 // 게시글 좋아요 추가
+    @GetMapping(value = "postLike.kh", produces = "text/html; charset=utf-8")
+    @ResponseBody
+    public String postLike(@RequestParam("targetNo") int postNo, 
+                           @RequestParam("userNo") int userNo,
+                           @RequestParam("targetType") String targetType) {
+        Like like = new Like(postNo, userNo, targetType);
+        int result = postService.insertLike(like);
+
+        if (result > 0) {
+	        	// 알림 생성 호출(case2)
+	            int postOwnerId = postService.getPostOwnerId(postNo); // 게시글 작성자 No 조회
+	            notifyController.sendNotification(like.getUserNo(), postOwnerId, 2);
+		        return "success";
+		    } else {
+		        return "fail";
+		    }
+    }
+    
+    // 댓글 좋아요 추가
+ 	@GetMapping("commentLike.kh")
+ 	@ResponseBody
+ 	public String commentLike(@RequestParam("targetNo") int commentNo, 
+ 							  @RequestParam("userNo") int userNo, 
+ 							  @RequestParam("targetType") String targetType) {
+ 			
+ 		 	Like like = new Like(commentNo, userNo, targetType);
+ 		    int result = postService.insertLike(like);
+ 		    
+ 		   // 알림 생성 호출(case3)
+            int commentOwnerId = postService.getCommentOwnerId(commentNo); // 댓글 작성자 No 조회
+            notifyController.sendNotification(userNo, commentOwnerId, 3);
+
+ 		    if (result > 0) {
+ 		        return "success";
+ 		    } else {
+ 		        return "fail";
+ 		    }
+ 	}
+
+    
+    // 게시글 좋아요 취소
+    @GetMapping(value = "postLikeDel.kh", produces = "text/html; charset=utf-8")
+    @ResponseBody
+    public String postLikeDel(@RequestParam("targetNo") int postNo, 
+                              @RequestParam("userNo") int userNo,
+                              @RequestParam("targetType") String targetType) {
+        Like like = new Like(postNo, userNo, targetType);
+        int result = postService.deleteLike(like);
+
+       		if (result > 0) {
+		        return "success";
+		    } else {
+		        return "fail";
+		    }
+    }
+    
+    // 댓글 좋아요 취소
+ 	@GetMapping("commentLikeDel.kh")
+ 	@ResponseBody
+ 	public String commentLikeDel(@RequestParam("targetNo") int commentNo, 
+ 								 @RequestParam("userNo") int userNo, 
+ 								 @RequestParam("targetType") String targetType) {
+ 		
+ 			Like like = new Like(commentNo, userNo, targetType);
+ 		    int result = postService.deleteLike(like);
+
+ 		    if (result > 0) {
+ 		        return "success";
+ 		    } else {
+ 		        return "fail";
+ 		    }
+ 	}
+	
+
+    // 게시글 좋아요 개수 조회
+    @GetMapping(value = "postlikeCnt.kh", produces = "text/html; charset=utf-8")
+    @ResponseBody
+    public String postLikeCnt(@RequestParam("targetNo") int postNo) {
+        Map<String, Object> likeCnt = new HashMap<>();
+        likeCnt.put("targetNo", postNo);
+        likeCnt.put("targetType", "P");
+
+        int likeCount = postService.countLike(likeCnt);
+
+        if (likeCount >= 0) { // 개수는 항상 0 이상
+		        return String.valueOf(likeCount);
+		    } else {
+		        return "fail";
+		    }
+    }
+    
+    // 댓글 좋아요 개수 조회
+ 	@GetMapping("commentLikeCnt.kh")
+ 	@ResponseBody
+ 	public String commentLikeCnt(@RequestParam("targetNo") int commentNo) {
+ 		 	
+ 			Map<String, Object> likeCnt = new HashMap<>();
+ 			likeCnt.put("targetNo", commentNo);
+ 			likeCnt.put("targetType", "C");
+
+ 		    int likeCount = postService.countLike(likeCnt);
+
+ 		    if (likeCount >= 0) { // 개수는 항상 0 이상
+ 		        return String.valueOf(likeCount);
+ 		    } else {
+ 		        return "fail";
+ 		    }
+ 	}
+	
+	
+	//좋아요 여부 확인
+	@GetMapping(value = "isLiked.kh", produces = "text/html; charset=utf-8")
+	@ResponseBody
+	public String isLiked(@RequestParam("targetNo") int targetNo, 
+	                      @RequestParam("userNo") int userNo, 
+	                      @RequestParam("targetType") String targetType) {
+		
+		
+	    // Like 객체 생성
+	    Like like = new Like(targetNo, userNo, targetType);
+
+	    // 좋아요 여부 확인
+	    int intRes = postService.isLiked(like);
+
+	    // 좋아요 상태에 따라 결과 반환
+	    return intRes > 0 ? "true" : "false";
+	}
+	
+	// 초기 게시물 로드: 팔로우한 사람 5개 + 전체 게시물 5개 또는 10개
+    @GetMapping(value = "initialPosts.kh", produces = "application/json; charset=utf-8")
+    @ResponseBody
+    public String getInitialPosts(HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            // 로그인 안 된 경우 빈 리스트를 Gson으로 변환해서 리턴
+            return new Gson().toJson(new ArrayList<Post>());
+        }
+
+        int userNo = loginMember.getUserNo();
+        // 초기 게시물 로드
+        List<Post> initialPosts = postService.getInitialPosts(userNo);
+
+        for (Post post : initialPosts) {
+            // 프로필 이미지 설정
+            String userImage = post.getUserImage();
+            if (userImage != null && !userImage.isEmpty()) {
+                post.setUserImage(userImage);
+            } else {
+                post.setUserImage("/resources/profile_file/default_profile.png");
+            }
+
+            // 다중 파일 처리
+            String rawFileNames = post.getPostFileName(); // 예: "1.jpg,2.jpg,3.jpg"
+            if (rawFileNames != null && !rawFileNames.trim().isEmpty()) {
+                List<String> fileList = Arrays.asList(rawFileNames.split(","));
+                List<String> updatedFileList = new ArrayList<>();
+                for (String file : fileList) {
+                    updatedFileList.add("/resources/post_file/" + file.trim());
+                }
+                post.setPostFileNames(updatedFileList);
+            } else {
+                post.setPostFileNames(new ArrayList<>()); // 빈 리스트 설정
+            }
+            
+            
+
+            // 날짜 포맷팅 (ex: ~분/~시간 전 등)
+            String formattedDate = DateUtil.calculateDate(post.getPostDate());
+            post.setPostDate(formattedDate);
+        }
+
+        Gson gson = new GsonBuilder().create();
+        return gson.toJson(initialPosts);
+    }
+
+    // 무한 스크롤 시 전체 게시물 추가 로드 (예: 10개씩)
+    @GetMapping(value = "loadMorePosts.kh", produces = "application/json; charset=utf-8")
+    @ResponseBody
+    public String loadMorePosts(@RequestParam("offset") int offset,
+					            @RequestParam("limit") int limit,
+					            @RequestParam(value = "excludeList", required = false) List<Integer> excludeList,
+					            HttpSession session) {
+
+    	// excludeList가 null인 경우 빈 리스트로 초기화
+	    if (excludeList == null) {
+	        excludeList = new ArrayList<>();
+	    }
+	    
+	    Member loginMember = (Member) session.getAttribute("loginMember");
+	    if (loginMember == null) {
+	        return new Gson().toJson(new ArrayList<Post>());
+	    }
+
+	    int userNo = loginMember.getUserNo();
+	    // 서비스 호출
+	    List<Post> morePosts = postService.getMorePosts(userNo, offset, limit, excludeList);
+
+        for (Post post : morePosts) {
+            // 프로필 이미지 설정
+            String userImage = post.getUserImage();
+            if (userImage != null && !userImage.isEmpty()) {
+                post.setUserImage(userImage);
+            } else {
+                post.setUserImage("/resources/profile_file/default_profile.png");
+            }
+
+            // 다중 파일 처리
+            String rawFileNames = post.getPostFileName(); // 예: "1.jpg,2.jpg,3.jpg"
+            if (rawFileNames != null && !rawFileNames.trim().isEmpty()) {
+                List<String> fileList = Arrays.asList(rawFileNames.split(","));
+                List<String> updatedFileList = new ArrayList<>();
+                for (String file : fileList) {
+                    updatedFileList.add("/resources/post_file/" + file.trim());
+                }
+                post.setPostFileNames(updatedFileList);
+            } else {
+                post.setPostFileNames(new ArrayList<>()); // 빈 리스트 설정
+            }
+
+            // 날짜 포맷팅
+            String formattedDate = DateUtil.calculateDate(post.getPostDate());
+            post.setPostDate(formattedDate);
+            
+        }
+
+        Gson gson = new Gson();
+        return gson.toJson(morePosts);
+    }
+    
+}	
+

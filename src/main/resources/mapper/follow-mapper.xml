@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="follow">
+	
+	<!-- 값이 있는지 확인 -->
+	<select id="selectCheckFollor" resultType="int">
+		select count(*)
+		  from follow
+		 where follower_no = #{follow}
+		   and following_no = #{followed}
+	</select>
+	
+	<!-- 팔로우 -->
+	<insert id="insertFollow">
+	 	insert into follow (following_no, follower_no)
+	 		   values (#{followed}, #{follow})
+	</insert>
+	
+	<!-- 언팔로우 -->
+	<delete id="deleteFollow">
+		  DELETE FROM follow
+   		   WHERE follower_no = #{followerNo}
+      		 AND following_no = #{followingNo}
+	</delete>
+	
+	<!-- 팔로워(나를 팔로우하는 사람) 수 구하기 -->
+    <select id="selectFollowerCount" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+          FROM follow
+         WHERE following_no = #{userNo}
+    </select>
+
+    <!-- 팔로잉(내가 팔로우하는 사람) 수 구하기 -->
+    <select id="selectFollowingCount" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+          FROM follow
+         WHERE follower_no = #{userNo}
+    </select>
+    
+    <!-- 로그인한 사용자가 키우는 반려동물 타입 목록 조회 -->
+    <select id="getMyPetTypes" parameterType="int" resultType="string">
+        SELECT breed_type AS breedType
+        FROM mypet
+        WHERE user_no = #{userNo}
+    </select>
+    
+    <!-- 추천 사용자 조회 -->
+    <select id="getRecommendUsers" parameterType="map" resultType="member">
+        SELECT *
+    FROM (
+        SELECT U.user_no AS userNo,
+               U.user_id AS userId,
+               U.user_nickname AS userNickname,
+               U.user_image AS userImage,
+               U.user_address AS userAddress,
+               U.enroll_date AS enrollDate,
+               U.acct_level AS acctLevel,
+               U.ban_yn AS banYN,
+               M.pet_type AS petType,
+               M.breed_type AS breedType,
+               ROW_NUMBER() OVER (PARTITION BY U.user_no ORDER BY DBMS_RANDOM.VALUE) AS rn
+        FROM tbl_user U
+        JOIN mypet M ON U.user_no = M.user_no
+        WHERE 1=1
+          <if test="petTypeList != null and !petTypeList.isEmpty()">
+              AND M.breed_type IN 
+                  <foreach collection="petTypeList" item="ptype" open="(" separator="," close=")">
+                      #{ptype}
+                  </foreach>
+          </if>
+          AND U.user_no != #{myUserNo}
+          AND U.user_no NOT IN (
+               SELECT F.follower_no
+                 FROM follow F
+                WHERE F.following_no = #{myUserNo}
+          )
+          AND U.user_no NOT IN (
+               SELECT F.following_no
+                 FROM follow F
+                WHERE F.follower_no = #{myUserNo}
+          )
+        ORDER BY DBMS_RANDOM.VALUE
+    )
+    WHERE rn = 1 AND ROWNUM &lt;= 5
+    </select>
+    <!-- 유저의 반려동물 정보 가져오기 -->
+    <select id="getPetsByUserNo" parameterType="int" resultType="mypet">
+        SELECT pet_no AS petNo,
+               user_no AS userNo,
+               pet_name AS petName,
+               pet_gender AS petGender,
+               pet_type AS petType,
+               breed_type AS breedType
+          FROM mypet
+         WHERE user_no = #{userNo}
+    </select>
+    
+    
+    <!-- 팔로워 목록 조회 (페이징 처리) -->
+    <select id="selectFollowers" parameterType="map" resultType="member">
+        SELECT * FROM (
+            SELECT U.*, ROWNUM rnum 
+            FROM (
+                SELECT F.follower_no AS userNo, 
+                       U.user_id AS userId, 
+                       U.user_nickname AS userNickname, 
+                       U.user_image AS userImage
+                FROM follow F
+                JOIN tbl_user U ON F.follower_no = U.user_no
+                WHERE F.following_no = #{userNo}
+                ORDER BY U.user_no DESC
+            ) U
+            WHERE ROWNUM &lt;= #{end}
+        )
+        WHERE rnum > #{start}
+    </select>
+
+    <!-- 팔로잉 목록 조회 (페이징 처리) -->
+    <select id="selectFollowings" parameterType="map" resultType="member">
+        SELECT * FROM (
+            SELECT U.*, ROWNUM rnum 
+            FROM (
+                SELECT F.following_no AS userNo, 
+                       U.user_id AS userId, 
+                       U.user_nickname AS userNickname, 
+                       U.user_image AS userImage
+                FROM follow F
+                JOIN tbl_user U ON F.following_no = U.user_no
+                WHERE F.follower_no = #{userNo}
+                ORDER BY U.user_no DESC
+            ) U
+            WHERE ROWNUM &lt;= #{end}
+        )
+        WHERE rnum > #{start}
+    </select>
+</mapper>
