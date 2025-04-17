@@ -307,6 +307,12 @@ public class MemberController {
 	    ArrayList<Member> users = memberService.searchUser(search);
 	    ArrayList<HashTag> tags;
 	    
+	    if (search == null || search.trim().isEmpty()) {
+	        /* 검색어가 없으면 HTML을 비워서 아무 것도 안 뜨게 함 */
+	        return "";
+	    }
+	    search = search.trim();
+	    
 	    //#으로 시작하고 #뒤에 값이 없으면 
 	    if(search.charAt(0) == '#' && search.length() > 1) { // #으로 시작하고 #뒤에 값이 있으면
 	    	String searchStr = search.replace("#", ""); // # 제거
@@ -389,6 +395,12 @@ public class MemberController {
 
 	    if (loginMember == null) {
 	        return "redirect:/"; // 로그인 안 된 경우
+	    }
+	    
+	    if (search == null || search.trim().isEmpty()) {
+	        model.addAttribute("search", "");   // 화면 쪽에서 비어 있음을 감지
+	        model.addAttribute("resultCount", 0); // JSP에서 “결과 없음” 처리용
+	        return "member/searchResult";
 	    }
 
 	    int userNo = loginMember.getUserNo();
